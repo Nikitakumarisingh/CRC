@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow-tech Repairs - Report a Leakage</title>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        p {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: -12px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 600px) {
+            form {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <form id="complaint-form" action="/upload" method="POST" enctype="multipart/form-data">
+        <h2>Report a Leakage</h2>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br>
+        
+        <label for="contact">Contact Information:</label>
+        <input type="email" id="contact" name="contact" required><br>
+        
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" required><br>
+        
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea><br>
+        
+        <label for="image-upload">Upload Image (Geo-tagged):</label>
+        <input type="file" id="image-upload" name="image-upload" accept="image/*" required><br>
+        <p id="upload-message">Only geo-tagged images are accepted.</p>
+        
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        document.getElementById('complaint-form').addEventListener('submit', function(event) {
+            var imageInput = document.getElementById('image-upload');
+            var file = imageInput.files[0];
+            
+            if (file) {
+                var reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    var dataUrl = e.target.result;
+                    var img = new Image();
+                    
+                    img.onload = function() {
+                        var exif = EXIF.readFromBinaryFile(base64ToArrayBuffer(dataUrl.split(',')[1]));
+                        
+                        if (exif.GPSLatitude && exif.GPSLongitude) {
+                            // Image is geo-tagged, proceed with form submission
+                            alert('Image is geo-tagged.');
+                            // Allow the form to submit
+                        } else {
+                            alert('The image does not contain geo-tagging information.');
+                            event.preventDefault();
+                        }
+                    };
+                    
+                    img.src = dataUrl;
+                };
+                
+                reader.readAsDataURL(file);
+            } else {
+                alert('Please upload an image.');
+                event.preventDefault();
+            }
+        });
+        
+        function base64ToArrayBuffer(base64) {
+            var binaryString = window.atob(base64);
+            var len = binaryString.length;
+            var bytes = new Uint8Array(len);
+            
+            for (var i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            return bytes.buffer;
+        }
+    </script>
+</body>
+</html>
